@@ -2,7 +2,7 @@
 
 ![Ralph](ralph.webp)
 
-Ralph is an autonomous AI agent loop that runs AI coding tools ([Amp](https://ampcode.com) or [Claude Code](https://docs.anthropic.com/en/docs/claude-code)) repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+Ralph is an autonomous AI agent loop that runs AI coding tools ([Amp](https://ampcode.com), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), or [opencode](https://opencode.ai)) repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
@@ -13,6 +13,9 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 - One of the following AI coding tools installed and authenticated:
   - [Amp CLI](https://ampcode.com) (default)
   - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`npm install -g @anthropic-ai/claude-code`)
+  - [opencode](https://opencode.ai) (`curl -fsSL https://opencode.ai/install | bash`), configured with
+    whichever provider/model you want to use (a hosted API, or a local model served
+    through Ollama/LM Studio/vLLM via an OpenAI-compatible provider in `opencode.json`)
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
 
@@ -28,7 +31,7 @@ mkdir -p scripts/ralph
 cp /path/to/ralph/ralph.sh scripts/ralph/
 
 # Copy the prompt template for your AI tool of choice:
-cp /path/to/ralph/prompt.md scripts/ralph/prompt.md    # For Amp
+cp /path/to/ralph/prompt.md scripts/ralph/prompt.md    # For Amp or opencode
 # OR
 cp /path/to/ralph/CLAUDE.md scripts/ralph/CLAUDE.md    # For Claude Code
 
@@ -115,9 +118,15 @@ This creates `prd.json` with user stories structured for autonomous execution.
 
 # Using Claude Code
 ./scripts/ralph/ralph.sh --tool claude [max_iterations]
+
+# Using opencode (any provider/model it's configured for, e.g. a local
+# model served through Ollama)
+./scripts/ralph/ralph.sh --tool opencode --model ollama/qwen3-coder [max_iterations]
 ```
 
-Default is 10 iterations. Use `--tool amp` or `--tool claude` to select your AI coding tool.
+Default is 10 iterations. Use `--tool amp`, `--tool claude`, or `--tool opencode` to
+select your AI coding tool. `--model provider/model` only applies to `--tool opencode`
+(Amp and Claude Code use whatever model they're already configured/authenticated with).
 
 Ralph will:
 1. Create a feature branch (from PRD `branchName`)
@@ -133,8 +142,8 @@ Ralph will:
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | The bash loop that spawns fresh AI instances (supports `--tool amp` or `--tool claude`) |
-| `prompt.md` | Prompt template for Amp |
+| `ralph.sh` | The bash loop that spawns fresh AI instances (supports `--tool amp`, `--tool claude`, or `--tool opencode`) |
+| `prompt.md` | Prompt template for Amp or opencode |
 | `CLAUDE.md` | Prompt template for Claude Code |
 | `prd.json` | User stories with `passes` status (the task list) |
 | `prd.json.example` | Example PRD format for reference |
@@ -162,7 +171,7 @@ npm run dev
 
 ### Each Iteration = Fresh Context
 
-Each iteration spawns a **new AI instance** (Amp or Claude Code) with clean context. The only memory between iterations is:
+Each iteration spawns a **new AI instance** (Amp, Claude Code, or opencode) with clean context. The only memory between iterations is:
 - Git history (commits from previous iterations)
 - `progress.txt` (learnings and context)
 - `prd.json` (which stories are done)
